@@ -1,6 +1,7 @@
 const board = document.getElementById("board");
 const loader = document.getElementById("loader");
 const playButton = document.getElementById("play-button");
+const output = document.getElementById("output");
 const cells = document.querySelectorAll(".cell");
 const wsUri = "ws://127.0.0.1";
 const ws = new WebSocket(wsUri);
@@ -19,7 +20,22 @@ function setState(newState, data) {
     loader.classList.add("hidden");
     turn = "cross";
     performTurn();
+  } else if (state === "won") {
+    handleEnd(data.index);
+    output.innerText = "You Win!!";
+  } else if (state === "drawn") {
+    handleEnd(data.index);
+    output.innerText = "It's a draw.";
+  } else if (state === "lost") {
+    handleEnd(data.index);
+    output.innerText = "You Lost..";
   }
+}
+
+function handleEnd(index) {
+  playCell(index);
+  turn = undefined;
+  performTurn();
 }
 
 function performTurn() {
@@ -74,6 +90,12 @@ ws.addEventListener("message", (event) => {
       setState("waiting");
     } else if (data.state === "START") {
       setState("playing", data);
+    } else if (data.state === "WIN") {
+      setState("won", data);
+    } else if (data.state === "LOSS") {
+      setState("lost", data);
+    } else if (data.state === "DRAW") {
+      setState("drawn", data);
     }
   } else if (data.turn) {
     playCell(data.index);

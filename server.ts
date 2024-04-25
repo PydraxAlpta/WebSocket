@@ -42,14 +42,16 @@ Deno.serve({
     }
   },
 });
-
+type Player = "naught" | "cross";
 class Lobby {
   firstId?: string;
   secondId?: string;
   state: "waiting" | "full" | "ended";
+  board: Array<Player | null>;
   constructor(firstId: string) {
     this.state = "waiting";
     this.firstId = firstId;
+    this.board = Array(9).fill(null);
   }
   connect(secondId: string) {
     if (this.state === "full") {
@@ -63,6 +65,62 @@ class Lobby {
   disconnect() {
     this.state = "ended";
     this.firstId = this.secondId = undefined;
+  }
+
+  makeMove(
+    index: number,
+    player: Player
+  ): "invalid" | "win" | "draw" | "continue" {
+    // Check if the index is valid and the cell is empty
+    if (index < 0 || index >= 9 || this.board[index] !== null) {
+      return "invalid";
+    }
+
+    // Update the board with the player's move
+    this.board[index] = player;
+
+    // Check if the current player wins
+    if (this.checkWin(player)) {
+      return "win";
+    }
+
+    // Check if the board is full (draw)
+    if (this.isBoardFull()) {
+      return "draw";
+    }
+
+    // Continue the game
+    return "continue";
+  }
+
+  private checkWin(player: Player): boolean {
+    const lines: number[][] = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8], // Rows
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8], // Columns
+      [0, 4, 8],
+      [2, 4, 6], // Diagonals
+    ];
+
+    for (const line of lines) {
+      const [a, b, c] = line;
+      if (
+        this.board[a] === player &&
+        this.board[b] === player &&
+        this.board[c] === player
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private isBoardFull(): boolean {
+    return this.board.every((cell) => cell !== null);
   }
 }
 
@@ -133,7 +191,7 @@ function handleStart(clientId: string, socket: WebSocket) {
   }
 }
 
-function handleTurn(clientId: string, index: number, turn: "cross" | "nought") {
+function handleTurn(clientId: string, index: number, turn: Player) {
   const lobby = lobbies.find(
     (l) =>
       (l.state === "full" && l.firstId === clientId) || l.secondId === clientId
@@ -141,10 +199,22 @@ function handleTurn(clientId: string, index: number, turn: "cross" | "nought") {
   if (lobby) {
     const opponentId =
       lobby.firstId === clientId ? lobby.secondId : lobby.firstId;
-    const nextTurn = turn === "cross" ? "naught" : "cross";
-    const payload = JSON.stringify({ turn: nextTurn, index });
     const playerSocket = id_socket_map[clientId];
     const opponentSocket = id_socket_map[opponentId!];
+    const nextTurn: Player = turn === "cross" ? "naught" : "cross";
+    const res = lobby.makeMove(index, turn);
+    if (res === "invalid") {
+      return;
+    }
+    if (res === "win") {
+      playerSocket.send(JSON.stringify({ state: "WIN", index }));
+      opponentSocket.send(JSON.stringify({ state: "LOSS", index }));
+    } else if (res === "draw") {
+      const payload = JSON.stringify({ state: "DRAW", index });
+      playerSocket.send(payload);
+      opponentSocket.send(payload);
+    }
+    const payload = JSON.stringify({ turn: nextTurn, index });
     playerSocket.send(payload);
     opponentSocket.send(payload);
   } else {

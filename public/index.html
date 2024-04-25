@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="entry-screen">
+      <h1>Welcome to Tic Tac Toe!</h1>
+      <button class="play-button" id="play-button">Play</button>
+    </div>
+
+    <div class="board hidden" id="board">
+      <button class="cell" id="cell-0"></button>
+      <button class="cell" id="cell-1"></button>
+      <button class="cell" id="cell-2"></button>
+      <button class="cell" id="cell-3"></button>
+      <button class="cell" id="cell-4"></button>
+      <button class="cell" id="cell-5"></button>
+      <button class="cell" id="cell-6"></button>
+      <button class="cell" id="cell-7"></button>
+      <button class="cell" id="cell-8"></button>
+    </div>
+
+    <div class="loader hidden" id="loader">
+      <div class="spinner"></div>
+      <span>Waiting...</span>
+    </div>
+
+    <div class="footer">
+      <div id="output"></div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "tasks": {
+    "dev": "deno run --watch --allow-read --allow-net server.ts"
+  },
+  "imports": {
+    "deno:media_types": "https://deno.land/std@0.223.0/media_types/mod.ts",
+    "deno:path": "https://deno.land/std@0.223.0/path/mod.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom"],
+    "strict": true
+  }
+}
